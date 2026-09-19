@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
 import { Download, Grid2X2, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, Undo2, Redo2 } from 'lucide-react'
 import './style.css'
 
@@ -53,3 +54,5 @@ function Control({ label, value, setValue }: { label: string; value: number; set
  return <label className="control"><span><b>{label}</b><em>{value > 0 ? '+' : ''}{value}</em></span><input type="range" min="-50" max="50" value={value} onChange={e => setValue(+e.target.value)} /></label>
 }
 export default App
+
+createRoot(document.getElementById('root')!).render(<App />)
