@@ -1,32 +1,84 @@
-import { PointerEvent, useEffect, useRef, useState } from 'react'
+import { CSSProperties, PointerEvent, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Download, Grid2X2, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, Undo2, Redo2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Grid2X2, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, Undo2, Redo2 } from 'lucide-react'
 import './style.css'
 import './pad.css'
+import './layout.css'
+import './header-layout.css'
+import './apple-font.css'
+import './wide-layout.css'
+import './adjust.css'
+import './adjust-grid.css'
+import './vignette.css'
+import './style-carousel.css'
+import './palette-arrows.css'
+import './five-style-cards.css'
+import './style-arrow-controls.css'
+import './style-arrow-center.css'
+import './style-snap.css'
+import './all-adjustments.css'
 
 type Style = { name: string; tone: number; color: number; palette: number; swatch: string }
 const styles: Style[] = [
-  { name: 'Original', tone: 0, color: 0, palette: 0, swatch: 'linear-gradient(135deg,#b9d4d8,#273c40)' },
-  { name: 'Natural', tone: 16, color: 8, palette: 8, swatch: 'linear-gradient(135deg,#e7c7a9,#688e89)' },
-  { name: 'Vivid', tone: 28, color: 35, palette: 22, swatch: 'linear-gradient(135deg,#f1655c,#235eaa)' },
-  { name: 'Warm', tone: 20, color: 26, palette: 35, swatch: 'linear-gradient(135deg,#f3a15d,#8b3232)' },
-  { name: 'Cool', tone: 10, color: -22, palette: -32, swatch: 'linear-gradient(135deg,#8dd6ec,#404ca3)' },
-  { name: 'Dramatic', tone: 48, color: -8, palette: 0, swatch: 'linear-gradient(135deg,#d6c8b8,#242327)' },
+  { name: 'Cool Rose', tone: 14, color: -24, palette: 25, swatch: 'linear-gradient(135deg,#bbd9ec,#a35b75)' },
+  { name: 'Neutral', tone: 0, color: 0, palette: 0, swatch: 'linear-gradient(135deg,#cad5d1,#4e5b5a)' },
+  { name: 'Bright', tone: 34, color: 9, palette: 5, swatch: 'linear-gradient(135deg,#fff0c9,#9bc8dd)' },
+  { name: 'Rose Gold', tone: 18, color: 21, palette: 28, swatch: 'linear-gradient(135deg,#e8a28d,#a3565a)' },
+  { name: 'Gold', tone: 22, color: 27, palette: 36, swatch: 'linear-gradient(135deg,#f4d47e,#a76c29)' },
+  { name: 'Amber', tone: 30, color: 34, palette: 44, swatch: 'linear-gradient(135deg,#f2a551,#79381f)' },
+  { name: 'Standard', tone: 0, color: 0, palette: 0, swatch: 'linear-gradient(135deg,#b9d4d8,#273c40)' },
+  { name: 'Vibrant', tone: 22, color: 42, palette: 10, swatch: 'linear-gradient(135deg,#f1665f,#225fad)' },
+  { name: 'Natural', tone: 12, color: 7, palette: 6, swatch: 'linear-gradient(135deg,#e7c7a9,#688e89)' },
+  { name: 'Luminous', tone: 38, color: 12, palette: 11, swatch: 'linear-gradient(135deg,#f6f4dd,#7fc7df)' },
+  { name: 'Dramatic', tone: 46, color: -9, palette: -8, swatch: 'linear-gradient(135deg,#d6c8b8,#242327)' },
+  { name: 'Quiet', tone: -16, color: -18, palette: -9, swatch: 'linear-gradient(135deg,#93a2a3,#465354)' },
+  { name: 'Cozy', tone: 8, color: 18, palette: 30, swatch: 'linear-gradient(135deg,#dba36a,#6d4635)' },
+  { name: 'Ethereal', tone: 29, color: -12, palette: -18, swatch: 'linear-gradient(135deg,#e1e9ed,#8678a5)' },
+  { name: 'Muted B&W', tone: -9, color: -50, palette: 0, swatch: 'linear-gradient(135deg,#d0d0cb,#666562)' },
+  { name: 'Stark B&W', tone: 42, color: -50, palette: 0, swatch: 'linear-gradient(135deg,#f5f5f2,#171717)' },
 ]
+const standardIndex = styles.findIndex(style => style.name === 'Standard')
+const adjustOptions = ['Exposure', 'Brilliance', 'Highlights', 'Shadows', 'Contrast', 'Brightness', 'Black Point', 'Saturation', 'Vibrance', 'Warmth', 'Tint', 'Sharpness', 'Definition', 'Noise Reduction', 'Vignette']
 
 function App() {
   const [image, setImage] = useState<string | null>(null)
-  const [active, setActive] = useState(1)
-  const [tone, setTone] = useState(styles[1].tone)
-  const [color, setColor] = useState(styles[1].color)
-  const [palette, setPalette] = useState(styles[1].palette)
+  const [editorTab, setEditorTab] = useState<'styles' | 'adjust'>('styles')
+  const [adjustments, setAdjustments] = useState<Record<string, number>>({})
+  const [active, setActive] = useState(standardIndex)
+  const [tone, setTone] = useState(styles[standardIndex].tone)
+  const [color, setColor] = useState(styles[standardIndex].color)
+  const [palette, setPalette] = useState(styles[standardIndex].palette)
   const input = useRef<HTMLInputElement>(null)
   const stylePad = useRef<HTMLDivElement>(null)
-  const filter = `contrast(${1 + tone / 170}) saturate(${1 + color / 120}) sepia(${Math.max(0, palette) / 180}) hue-rotate(${Math.min(0, palette) * 0.45}deg)`
+  const styleStrip = useRef<HTMLDivElement>(null)
+  const value = (name: string) => adjustments[name] ?? 0
+  const filter = `brightness(${1 + (value('Exposure') + value('Brightness')) / 180}) contrast(${1 + tone / 170 + (value('Contrast') + value('Black Point') + value('Definition')) / 220}) saturate(${1 + color / 120 + (value('Saturation') + value('Vibrance') + value('Brilliance')) / 180}) sepia(${Math.max(0, palette + value('Warmth')) / 180}) hue-rotate(${(Math.min(0, palette) * .45) + value('Tint') * .5}deg) blur(${Math.max(0, -value('Sharpness') - value('Noise Reduction')) / 70}px)`
 
-  useEffect(() => { const s = styles[active]; setTone(s.tone); setColor(s.color); setPalette(s.palette) }, [active])
+  useEffect(() => {
+    const s = styles[active]
+    if (!s) return
+    setTone(s.tone)
+    setColor(s.color)
+    setPalette(s.palette)
+  }, [active])
+  useEffect(() => { centerStyle(standardIndex, 'auto') }, [])
+  useEffect(() => { if (editorTab === 'styles') centerStyle(active, 'auto') }, [editorTab])
   function chooseFile(file?: File) { if (file?.type.startsWith('image/')) setImage(URL.createObjectURL(file)) }
-  function reset() { setActive(0); setTone(0); setColor(0); setPalette(0) }
+  function reset() { setActive(standardIndex); setTone(0); setColor(0); setPalette(0) }
+  function resetAdjustments() { setAdjustments({}) }
+  function centerStyle(index: number, behavior: ScrollBehavior = 'smooth') {
+    requestAnimationFrame(() => {
+      const strip = styleStrip.current
+      const card = strip?.children.item(index) as HTMLElement | null
+      if (strip && card) strip.scrollTo({ left: card.offsetLeft - strip.clientWidth / 2 + card.offsetWidth / 2, behavior })
+    })
+  }
+  function chooseStyle(index: number) { setActive(index); centerStyle(index) }
+  function scrollStyles(direction: number) {
+    const strip = styleStrip.current
+    const firstCard = strip?.children.item(0) as HTMLElement | null
+    if (strip && firstCard) strip.scrollBy({ left: direction * (firstCard.offsetWidth + 12), behavior: 'smooth' })
+  }
   function moveStyleDot(event: PointerEvent<HTMLDivElement>) {
     const bounds = stylePad.current?.getBoundingClientRect()
     if (!bounds) return
@@ -38,19 +90,20 @@ function App() {
   }
   return <main className="app">
     <header>
-      <button className="word-button">Cancel</button>
       <div className="brand"><Sparkles size={17} fill="currentColor" /> LUMA</div>
       <button className="done" onClick={() => input.current?.click()}>Add photo</button>
     </header>
+    <div className="content-layout horizontal">
     <section className="workspace">
-      <div className={'photo-stage' + (!image ? ' empty' : '')} onClick={() => !image && input.current?.click()}>
+      <div className={'photo-stage' + (!image ? ' empty' : '') + (image && value('Vignette') !== 0 ? ' has-vignette' : '')} style={{ '--vignette-strength': Math.abs(value('Vignette')) / 55 } as CSSProperties} onClick={() => !image && input.current?.click()}>
         {image ? <img src={image} style={{ filter }} alt="Your selected photo" /> : <div className="empty-state"><div className="upload-icon"><ImagePlus size={27}/></div><h1>Your photo, your style.</h1><p>Tap to choose an image and create a look that feels like you.</p><button className="upload-cta">Choose photo</button></div>}
       </div>
       <input ref={input} type="file" accept="image/*" hidden onChange={e => chooseFile(e.target.files?.[0])}/>
     </section>
     <section className="editor" aria-label="Photo editor controls">
-      <div className="tool-row"><button className="icon-button" aria-label="Undo"><Undo2 size={20}/></button><button className="icon-button muted" aria-label="Redo"><Redo2 size={20}/></button><span className="section-title">STYLES</span><button className="icon-button" onClick={reset} aria-label="Reset adjustments"><RotateCcw size={19}/></button><button className="export" onClick={() => alert('Export will be connected in the next step.') }><Download size={17}/> Export</button></div>
-      <div className="style-strip">{styles.map((style, index) => <button key={style.name} onClick={() => setActive(index)} className={'style-card ' + (active === index ? 'selected' : '')}><span className="thumbnail" style={{ background: style.swatch }}></span><span>{style.name}</span></button>)}</div>
+      <div className="tool-row"><button className="icon-button" aria-label="Undo"><Undo2 size={20}/></button><button className="icon-button muted" aria-label="Redo"><Redo2 size={20}/></button><div className="editor-switch"><button className={editorTab === 'styles' ? 'selected' : ''} onClick={() => setEditorTab('styles')}>Styles</button><button className={editorTab === 'adjust' ? 'selected' : ''} onClick={() => setEditorTab('adjust')}>Adjust</button></div><button className="icon-button" onClick={editorTab === 'styles' ? reset : resetAdjustments} aria-label="Reset adjustments"><RotateCcw size={19}/></button><button className="export" onClick={() => alert('Export will be connected in the next step.') }><Download size={17}/> Export</button></div>
+      {editorTab === 'styles' ? <>
+      <div className="style-carousel"><button className="style-scroll" onClick={() => scrollStyles(-1)} aria-label="Previous styles"><ChevronLeft size={17}/></button><div className="style-strip" ref={styleStrip}>{styles.map((style, index) => <button key={style.name} onClick={() => chooseStyle(index)} className={'style-card ' + (active === index ? 'selected' : '')}><span className="thumbnail" style={{ background: style.swatch }}></span><span>{style.name}</span></button>)}</div><button className="style-scroll" onClick={() => scrollStyles(1)} aria-label="More styles"><ChevronRight size={17}/></button></div>
       <div className="style-pad-wrap">
         <div className="pad-heading"><span>STYLE MAP</span><small>Drag to tune your look</small></div>
         <div className="style-pad" ref={stylePad} onPointerDown={moveStyleDot} onPointerMove={event => { if (event.buttons === 1) moveStyleDot(event) }}>
@@ -65,8 +118,10 @@ function App() {
         <Control label="Palette" value={palette} setValue={setPalette} />
         <button className="reset" onClick={reset}><RotateCcw size={15}/> Reset adjustments</button>
       </div>
-      <nav className="tabbar"><button className="active"><Grid2X2 size={20}/><span>Styles</span></button><button><SlidersHorizontal size={20}/><span>Adjust</span></button><button onClick={() => input.current?.click()}><ImagePlus size={20}/><span>Photo</span></button></nav>
+      </> : <div className="adjust-panel adjust-list">{adjustOptions.map(option => <Control key={option} label={option} value={value(option)} setValue={nextValue => setAdjustments(current => ({ ...current, [option]: nextValue }))} />)}<button className="reset adjust-reset" onClick={resetAdjustments}><RotateCcw size={15}/> Reset all adjustments</button></div>}
+      <nav className="tabbar"><button className={editorTab === 'styles' ? 'active' : ''} onClick={() => setEditorTab('styles')}><Grid2X2 size={20}/><span>Styles</span></button><button className={editorTab === 'adjust' ? 'active' : ''} onClick={() => setEditorTab('adjust')}><SlidersHorizontal size={20}/><span>Adjust</span></button><button onClick={() => input.current?.click()}><ImagePlus size={20}/><span>Photo</span></button></nav>
     </section>
+    </div>
   </main>
 }
 function Control({ label, value, setValue }: { label: string; value: number; setValue: (value: number) => void }) {

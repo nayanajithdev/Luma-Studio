@@ -1,0 +1,2 @@
+.adjust-grid{flex-wrap:wrap;overflow:visible;padding-bottom:16px}.adjust-grid button{flex:1 0 auto;min-width:92px}
+.content-layout.horizontal .adjust-grid button{min-width:104px}

@@ -1,0 +1,6 @@
+@media(min-width:1051px){
+  .content-layout.horizontal{width:100%;max-width:none;height:calc(100vh - 76px);grid-template-columns:minmax(0,7fr) minmax(350px,3fr);gap:60px;padding:30px clamp(40px,4vw,64px)}
+  .content-layout.horizontal .editor{align-self:start}
+  .content-layout.horizontal .workspace{align-self:start}
+  .content-layout.horizontal .photo-stage{height:calc(100vh - 136px);max-height:none}
+}

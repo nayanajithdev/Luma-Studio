@@ -1,0 +1,1 @@
+.photo-stage.has-vignette:after{content:'';position:absolute;z-index:2;pointer-events:none;inset:0;background:radial-gradient(ellipse at center,transparent 28%,rgba(0,0,0,.12) 52%,rgba(0,0,0,.94) 128%);opacity:var(--vignette-strength);mix-blend-mode:multiply}
