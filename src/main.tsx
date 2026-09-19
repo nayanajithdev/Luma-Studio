@@ -1,6 +1,6 @@
 import { CSSProperties, PointerEvent, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ChevronLeft, ChevronRight, Download, Grid2X2, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, Undo2, Redo2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Crop, Download, Grid2X2, ImagePlus, RotateCcw, SlidersHorizontal, Sparkles, Undo2, Redo2 } from 'lucide-react'
 import { renderStyledPhoto } from './color-engine'
 import './style.css'
 import './pad.css'
@@ -10,7 +10,6 @@ import './apple-font.css'
 import './wide-layout.css'
 import './adjust.css'
 import './adjust-grid.css'
-import './vignette.css'
 import './style-carousel.css'
 import './palette-arrows.css'
 import './five-style-cards.css'
@@ -19,6 +18,13 @@ import './style-arrow-center.css'
 import './style-snap.css'
 import './all-adjustments.css'
 import './canvas-photo.css'
+import './mobile-styles.css'
+import './mobile-main-tabs.css'
+import './responsive-mobile.css'
+import './mobile-tab-override.css'
+import './hide-mobile-toolbar.css'
+import './mobile-tab-cleanup.css'
+import './mobile-values-default.css'
 
 type Style = { name: string; tone: number; color: number; palette: number; swatch: string }
 const styles: Style[] = [
@@ -46,6 +52,7 @@ function App() {
   const [image, setImage] = useState<string | null>(null)
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null)
   const [editorTab, setEditorTab] = useState<'styles' | 'adjust'>('styles')
+  const [mobileStyleMap, setMobileStyleMap] = useState(false)
   const [adjustments, setAdjustments] = useState<Record<string, number>>({})
   const [active, setActive] = useState(standardIndex)
   const [tone, setTone] = useState(styles[standardIndex].tone)
@@ -79,6 +86,7 @@ function App() {
     resetToStandard()
     resetAdjustments()
     setEditorTab('styles')
+    setMobileStyleMap(false)
   }
   function resetStyleControls() { setTone(selectedStyle.tone); setColor(selectedStyle.color); setPalette(selectedStyle.palette) }
   function resetToStandard() { const standard = styles[standardIndex]; setActive(standardIndex); setTone(standard.tone); setColor(standard.color); setPalette(standard.palette) }
@@ -90,7 +98,13 @@ function App() {
       if (strip && card) strip.scrollTo({ left: card.offsetLeft - strip.clientWidth / 2 + card.offsetWidth / 2, behavior })
     })
   }
-  function chooseStyle(index: number) { setActive(index); centerStyle(index) }
+  function chooseStyle(index: number) {
+    const isMobile = window.matchMedia('(max-width: 1050px)').matches
+    const isCurrentStyle = active === index
+    setActive(index)
+    centerStyle(index)
+    if (isMobile) setMobileStyleMap(isCurrentStyle)
+  }
   function scrollStyles(direction: number) {
     const strip = styleStrip.current
     const firstCard = strip?.children.item(0) as HTMLElement | null
@@ -104,23 +118,24 @@ function App() {
     setColor(Math.round((x - .5) * 100))
     setTone(Math.round((.5 - y) * 100))
   }
-  return <main className="app">
+  return <main className="app" onClick={event => { if (mobileStyleMap && !(event.target as HTMLElement).closest('.style-pad')) setMobileStyleMap(false) }}>
     <header>
       <div className="brand"><Sparkles size={17} fill="currentColor" /> LUMA</div>
       <button className="done" onClick={() => input.current?.click()}>Add photo</button>
     </header>
     <div className="content-layout horizontal">
     <section className="workspace">
-      <div className={'photo-stage' + (!image ? ' empty' : '') + (image && value('Vignette') !== 0 ? ' has-vignette' : '')} style={{ '--vignette-strength': Math.abs(value('Vignette')) / 55 } as CSSProperties} onClick={() => !image && input.current?.click()}>
+      <div className={'photo-stage' + (!image ? ' empty' : '')} onClick={() => mobileStyleMap ? setMobileStyleMap(false) : !image && input.current?.click()}>
         {image ? <canvas ref={canvas} className="photo-canvas" aria-label="Your edited photo" /> : <div className="empty-state"><div className="upload-icon"><ImagePlus size={27}/></div><h1>Your photo, your style.</h1><p>Tap to choose an image and create a look that feels like you.</p><button className="upload-cta">Choose photo</button></div>}
       </div>
       <input ref={input} type="file" accept="image/*" hidden onChange={e => chooseFile(e.target.files?.[0])}/>
     </section>
-    <section className="editor" aria-label="Photo editor controls">
+    <section className={'editor ' + (mobileStyleMap ? 'mobile-map-active' : '')} aria-label="Photo editor controls">
       <div className="tool-row"><button className="icon-button" aria-label="Undo"><Undo2 size={20}/></button><button className="icon-button muted" aria-label="Redo"><Redo2 size={20}/></button><div className="editor-switch"><button className={editorTab === 'styles' ? 'selected' : ''} onClick={() => setEditorTab('styles')}>Styles</button><button className={editorTab === 'adjust' ? 'selected' : ''} onClick={() => setEditorTab('adjust')}>Adjust</button></div><button className="icon-button" onClick={editorTab === 'styles' ? resetStyleControls : resetAdjustments} aria-label="Reset adjustments"><RotateCcw size={19}/></button><button className="export" onClick={() => alert('Export will be connected in the next step.') }><Download size={17}/> Export</button></div>
       {editorTab === 'styles' ? <>
       <div className="style-carousel"><button className="style-scroll" onClick={() => scrollStyles(-1)} aria-label="Previous styles"><ChevronLeft size={17}/></button><div className="style-strip" ref={styleStrip}>{styles.map((style, index) => <button key={style.name} onClick={() => chooseStyle(index)} className={'style-card ' + (active === index ? 'selected' : '')}><span className="thumbnail" style={{ background: style.swatch }}></span><span>{style.name}</span></button>)}</div><button className="style-scroll" onClick={() => scrollStyles(1)} aria-label="More styles"><ChevronRight size={17}/></button></div>
-      <div className="style-pad-wrap">
+      <div className={'mobile-style-values ' + (mobileStyleMap ? 'mobile-open' : '')}><span>Tone <b>{tone}</b></span><span>Color <b>{color}</b></span><span>Palette <b>{palette}</b></span></div>
+      <div className={'style-pad-wrap ' + (mobileStyleMap ? 'mobile-open' : '')}>
         <div className="pad-heading"><span>STYLE MAP</span><small>Drag to tune your look</small></div>
         <div className="style-pad" style={{ background: `radial-gradient(circle at 50% 0%,rgba(255,255,255,.18),transparent 52%),${styles[active]?.swatch ?? styles[standardIndex].swatch}` } as CSSProperties} ref={stylePad} onPointerDown={moveStyleDot} onPointerMove={event => { if (event.buttons === 1) moveStyleDot(event) }}>
           <span className="pad-label top">BRIGHT</span><span className="pad-label bottom">RICH</span><span className="pad-label left">COOL</span><span className="pad-label right">WARM</span>
@@ -128,14 +143,11 @@ function App() {
           <span className="style-dot" style={{ left: `${color + 50}%`, top: `${50 - tone}%` }} />
         </div>
       </div>
-      <div className="control-card">
-        <Control label="Tone" value={tone} setValue={setTone} />
-        <Control label="Color" value={color} setValue={setColor} />
+      <div className="control-card style-controls">
         <Control label="Palette" value={palette} setValue={setPalette} min={0} max={100} />
-        <button className="reset" onClick={resetStyleControls}><RotateCcw size={15}/> Reset adjustments</button>
       </div>
       </> : <div className="adjust-panel adjust-list">{adjustOptions.map(option => <Control key={option} label={option} value={value(option)} setValue={nextValue => setAdjustments(current => ({ ...current, [option]: nextValue }))} />)}<button className="reset adjust-reset" onClick={resetAdjustments}><RotateCcw size={15}/> Reset all adjustments</button></div>}
-      <nav className="tabbar"><button className={editorTab === 'styles' ? 'active' : ''} onClick={() => setEditorTab('styles')}><Grid2X2 size={20}/><span>Styles</span></button><button className={editorTab === 'adjust' ? 'active' : ''} onClick={() => setEditorTab('adjust')}><SlidersHorizontal size={20}/><span>Adjust</span></button><button onClick={() => input.current?.click()}><ImagePlus size={20}/><span>Photo</span></button></nav>
+      <nav className="tabbar"><button className={editorTab === 'styles' ? 'active' : ''} onClick={() => { setEditorTab('styles'); setMobileStyleMap(false) }}><Grid2X2 size={22}/><span>Styles</span></button><button className={editorTab === 'adjust' ? 'active' : ''} onClick={() => { setEditorTab('adjust'); setMobileStyleMap(false) }}><SlidersHorizontal size={22}/><span>Adjust</span></button><button><Crop size={22}/><span>Crop</span></button></nav>
     </section>
     </div>
   </main>

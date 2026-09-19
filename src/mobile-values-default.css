@@ -1,0 +1,30 @@
+.mobile-style-values{display:none}
+
+.photo-stage,.style-card .thumbnail,.style-card,.tabbar,.tabbar button,.style-controls,input[type=range]::-webkit-slider-thumb{transition:transform .2s ease,opacity .2s ease,background-color .2s ease,box-shadow .2s ease,outline-color .2s ease}
+.tool-row button,.editor-switch,.editor-switch button,.control-card,.adjust-panel,.style-pad-wrap,.style-pad,.style-scroll,.upload-cta,.done,.export,.icon-button,.reset{transition:transform .2s ease,opacity .2s ease,background-color .2s ease,border-color .2s ease,box-shadow .2s ease,color .2s ease}
+.style-card:hover .thumbnail{transform:translateY(-2px)}
+.style-card:active .thumbnail,.tabbar button:active,.tool-row button:active,.style-scroll:active,.upload-cta:active,.done:active,.export:active,.reset:active{transform:scale(.96)}
+.tool-row button:hover,.style-scroll:hover,.upload-cta:hover,.done:hover,.export:hover,.reset:hover{box-shadow:0 5px 16px #0004;transform:translateY(-1px)}
+.style-pad-wrap{animation:panelIn .26s ease both}
+
+@keyframes panelIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:1050px){
+  .editor.mobile-map-active .style-controls{display:grid;width:min(100%,320px);margin:12px auto 0;padding:14px 16px}
+  .editor.mobile-map-active .style-controls .control span{margin-bottom:10px}
+  .style-pad-wrap.mobile-open,.mobile-style-values.mobile-open,.editor.mobile-map-active .style-controls{animation:mobileControlIn .22s ease both}
+}
+
+@keyframes mobileControlIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+@media(max-width:600px){
+  .content-layout.horizontal .workspace{padding:10px 16px 0}
+  .content-layout.horizontal .photo-stage{height:min(66dvh,620px);max-height:none}
+  .content-layout.horizontal .tabbar{width:min(calc(100% - 56px),300px);padding:5px 6px;border-radius:20px}
+  .content-layout.horizontal .tabbar button{padding:6px 11px;gap:2px;font-size:9px}
+  .content-layout.horizontal .tabbar button svg{width:19px;height:19px}
+}
